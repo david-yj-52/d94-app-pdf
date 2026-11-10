@@ -1,0 +1,15 @@
+services:
+  d94-pdf-parser:
+    build: .
+    image: d94-app-pdf:latest
+    container_name: d94-pdf-parser
+    restart: unless-stopped
+    environment:
+      PDF_SERVICE_TOKEN: ${PDF_SERVICE_TOKEN:?PDF_SERVICE_TOKEN is required}
+    networks:
+      - cloud
+
+networks:
+  cloud:
+    external: true
+    name: ${CLOUD_NETWORK_NAME:-befw-cloud-network}
