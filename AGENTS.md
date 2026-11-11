@@ -23,7 +23,8 @@
 | 테스트 | `.venv/bin/pytest -q` |
 | 실제 PDF 확인 | `STUDY_SAMPLE_PDF=/path/to.pdf .venv/bin/pytest -q -k cisa` |
 | 로컬 실행 | `PDF_SERVICE_TOKEN=dev .venv/bin/uvicorn pdfparser.api.main:app --reload --port 8080` |
-| 기동 | `docker compose --env-file .env up -d --build` |
+| 기동 (GHCR) | `docker compose --env-file .env pull && docker compose --env-file .env up -d` |
+| 배포 | `deploy` 브랜치 push → Actions가 테스트 후 `ghcr.io/david-yj-52/d94-app-pdf:latest` 게시 |
 
 ## 3. 불변식
 

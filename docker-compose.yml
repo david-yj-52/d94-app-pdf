@@ -1,7 +1,6 @@
 services:
   d94-pdf-parser:
-    build: .
-    image: d94-app-pdf:latest
+    image: ghcr.io/david-yj-52/d94-app-pdf:${IMAGE_TAG:-latest}
     container_name: d94-pdf-parser
     restart: unless-stopped
     environment:
