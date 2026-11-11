@@ -1,6 +1,7 @@
 name: Build & Push to GHCR
 
 on:
+  workflow_dispatch:
   pull_request:
     branches: [ deploy ]
   push:
