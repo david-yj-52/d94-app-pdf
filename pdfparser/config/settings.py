@@ -6,4 +6,4 @@ class Settings(BaseSettings):
 
     service_token: str = ""
     max_file_bytes: int = 52_428_800
-    parser_version: str = "1.0.1"
+    parser_version: str = "1.0.2"
