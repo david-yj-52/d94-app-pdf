@@ -19,7 +19,7 @@
 
 | 목적 | 명령 |
 |---|---|
-| 개발 설치 | `python3.12 -m venv .venv && .venv/bin/pip install -e '.[dev]'` |
+| 개발 설치 | `python3.12 -m venv .venv && .venv/bin/pip install -e '.[dev]' && .venv/bin/python -m spacy download en_core_web_sm` |
 | 테스트 | `.venv/bin/pytest -q` |
 | 실제 PDF 확인 | `STUDY_SAMPLE_PDF=/path/to.pdf .venv/bin/pytest -q -k cisa` |
 | 로컬 실행 | `PDF_SERVICE_TOKEN=dev .venv/bin/uvicorn pdfparser.api.main:app --reload --port 8080` |

@@ -74,10 +74,6 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @app.post("/pdf/api/v1/syntax", dependencies=[Depends(require_token)])
     async def syntax(req: SyntaxRequest) -> dict:
         spans = await run_in_threadpool(analyze, [(b.key, b.text) for b in req.blocks])
-        return {"analyzerVersion": ANALYZER_VERSION, "spans": [s.__dict__ for s in spans]}
-
-    @app.get("/pdf/api/v1/syntax/version", dependencies=[Depends(require_token)])
-    def syntax_version() -> dict:
-        return {"analyzerVersion": ANALYZER_VERSION}
+        return {"analyzerVersion": ANALYZER_VERSION, "spans": [{"blockKey": s.block_key, "start": s.start, "end": s.end, "role": s.role} for s in spans]}
 
     return app
