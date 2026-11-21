@@ -1,4 +1,4 @@
-"""캡션("Table N.N:" / "Figure N.N:")이 있는 쪽에서만 표·그림 영역을 찾는다."""
+"""표·그림 캡션과 표 언급을 이용해 PDF 영역을 찾는다."""
 import re
 
 import pymupdf
@@ -6,16 +6,25 @@ import pymupdf
 from .model import FigureRegion, Line, TableRegion
 
 CAPTION_TABLE = re.compile(r"^Table \d+\.\d+:")
+TABLE_REFERENCE = re.compile(r"\btable\b", re.IGNORECASE)
 CAPTION_FIGURE = re.compile(r"^Figure \d+\.\d+:")
 FIGURE_DPI = 150
 
 
 def find_table_regions(page: pymupdf.Page, page_lines: list[Line]) -> list[TableRegion]:
     captions = [ln for ln in page_lines if CAPTION_TABLE.match(ln.text)]
-    if not captions:  # find_tables()는 쪽당 최대 2초라 캡션 있는 쪽만
+    # CISA 교재는 캡션/테두리 없이 표를 소개한 문장 바로 뒤에 표를 두기도 한다.
+    # 모든 쪽에서 표 감지를 실행하면 비용이 커지므로 표 언급이 있는 쪽만 추가 탐색한다.
+    has_table_reference = any(TABLE_REFERENCE.search(ln.text) for ln in page_lines)
+    if not captions and not has_table_reference:
         return []
     out = []
-    for t in page.find_tables().tables:
+    found = page.find_tables().tables
+    # 선이 없는 표는 기본 선 기반 감지에서 빠진다. 해당 쪽에 표 언급이 있을 때만
+    # 텍스트 배치 기반 감지를 시도해 실행 시간을 제한한다.
+    if not found and has_table_reference:
+        found = page.find_tables(strategy="text").tables
+    for t in found:
         x0, y0, x1, y1 = t.bbox
         below = [c for c in captions if c.y0 >= y1 - 2]
         above = [c for c in captions if c.y1 <= y0 + 2]

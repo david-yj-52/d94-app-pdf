@@ -54,6 +54,20 @@ def test_page_without_caption_skips_detection():
     assert find_table_regions(doc[0], page_lines(doc, 1)) == []
 
 
+def test_table_reference_detects_uncaptioned_table():
+    doc = open_pdf(make_pdf([[
+        T("The following table outlines the differences:", 80),
+        T("Strategy Committee", 140, x=72), T("Steering Committee", 140, x=300),
+        T("Members", 180, x=72), T("Board members and specialist officers", 180, x=300),
+        T("Responsibilities", 220, x=72), T("CEO, CIO, and other functionaries", 220, x=300),
+    ]]))
+
+    [region] = find_table_regions(doc[0], page_lines(doc, 1))
+    assert region.caption == ""
+    assert region.cells[0] == ["Strategy Committee", "Steering Committee"]
+    assert region.cells[1] == ["Members", "Board members and specialist officers"]
+
+
 def test_caption_without_detectable_table_keeps_lines():
     doc = open_pdf(make_pdf([[T("Table 1.3: Missing grid", 300, 9)]]))
     assert find_table_regions(doc[0], page_lines(doc, 1)) == []
