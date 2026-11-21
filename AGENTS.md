@@ -33,7 +33,7 @@
 3. 처리할 수 없는 PDF는 422 `{code, message}` — `code`는 `ENCRYPTED` / `NO_TEXT_LAYER` / `INVALID_PDF`. `message`는 사용자에게 그대로 보여 줄 한국어.
 4. 응답 JSON 키(camelCase)와 블록 type(`HEADING`, `PARAGRAPH`, `LIST_ITEM`, `TABLE`, `TABLE_CELL`, `FIGURE`)는 d94-query `ParserResponse`와 짝이다. 바꾸면 양쪽을 같이 바꾸고 `PDF_PARSER_VERSION`을 올린다.
 5. 블록 키 `b000001`…, 섹션 키 `s0001`…은 문서 순서다. 저장된 마킹이 이 키를 참조한다.
-6. `POST /pdf/api/v1/syntax`도 `X-Service-Token` 인증이 필요하다. 입력 블록 오프셋에 맞춘 span만 반환하며 모델 버전은 캐시 무효화 키에 쓰인다.
+6. `POST /pdf/api/v1/syntax`도 `X-Service-Token` 인증이 필요하다. 입력 블록 오프셋에 맞춘 span만 반환하며 span 오프셋은 웹이 JS로 자르므로 UTF-16 단위다. 모델 버전은 캐시 키가 아니다(백엔드 캐시는 버전을 무시). spaCy/모델을 올리면 `DELETE FROM SN_STUDY_SYNTAX`로 비운다.
 
 ## 4. 구조
 

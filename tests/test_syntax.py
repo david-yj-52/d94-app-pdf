@@ -50,3 +50,10 @@ def test_subtree_excludes_trailing_punctuation():
     text = "The auditor, who reviewed the logs, approved the plan."
     clauses = [t for t, role in roles(text) if role == "CLAUSE"]
     assert clauses and all(not t.endswith(",") for t in clauses)
+
+
+def test_offsets_are_utf16_after_non_bmp_char():
+    text = "𝑥 The auditor reviews the logs."
+    u16 = text.encode("utf-16-le")
+    got = {u16[2 * s.start:2 * s.end].decode("utf-16-le") for s in analyze([("b1", text)]) if s.role == "SUBJECT"}
+    assert "The auditor" in got

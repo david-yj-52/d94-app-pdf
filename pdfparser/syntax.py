@@ -65,4 +65,10 @@ def analyze(blocks: list[tuple[str, str]]) -> list[Span]:
                for o in candidates):
             continue
         out.append(s)
+    # 웹은 JS(UTF-16) 인덱스로 자른다: 비BMP 문자(𝑥, 이모지)가 있으면 코드포인트 오프셋을 UTF-16 단위로 변환
+    texts = dict(blocks)
+    def u16(key, i):
+        t = texts[key]
+        return i if t.isascii() else len(t[:i].encode("utf-16-le")) // 2
+    out = [Span(s.block_key, u16(s.block_key, s.start), u16(s.block_key, s.end), s.role) for s in out]
     return sorted(set(out), key=lambda s: (s.block_key, s.start, s.end, s.role))
