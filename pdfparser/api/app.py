@@ -3,13 +3,24 @@ import hmac
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Request, UploadFile
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 from starlette.concurrency import run_in_threadpool
 
 from pdfparser.config.settings import Settings
 from pdfparser.parser.assemble import parse_pdf
 from pdfparser.parser.model import ParseError, ParseResult
+from pdfparser.syntax import ANALYZER_VERSION, analyze
 
 MULTIPART_OVERHEAD = 64 * 1024
+
+
+class SyntaxBlock(BaseModel):
+    key: str
+    text: str
+
+
+class SyntaxRequest(BaseModel):
+    blocks: list[SyntaxBlock]
 
 
 def to_response(r: ParseResult) -> dict:
@@ -59,5 +70,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         except ParseError as e:
             return JSONResponse({"code": e.code, "message": e.message}, 422)
         return to_response(result)
+
+    @app.post("/pdf/api/v1/syntax", dependencies=[Depends(require_token)])
+    async def syntax(req: SyntaxRequest) -> dict:
+        spans = await run_in_threadpool(analyze, [(b.key, b.text) for b in req.blocks])
+        return {"analyzerVersion": ANALYZER_VERSION, "spans": [{"blockKey": s.block_key, "start": s.start, "end": s.end, "role": s.role} for s in spans]}
 
     return app

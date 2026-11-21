@@ -19,7 +19,7 @@
 
 | 목적 | 명령 |
 |---|---|
-| 개발 설치 | `python3.12 -m venv .venv && .venv/bin/pip install -e '.[dev]'` |
+| 개발 설치 | `python3.12 -m venv .venv && .venv/bin/pip install -e '.[dev]' && .venv/bin/python -m spacy download en_core_web_sm` |
 | 테스트 | `.venv/bin/pytest -q` |
 | 실제 PDF 확인 | `STUDY_SAMPLE_PDF=/path/to.pdf .venv/bin/pytest -q -k cisa` |
 | 로컬 실행 | `PDF_SERVICE_TOKEN=dev .venv/bin/uvicorn pdfparser.api.main:app --reload --port 8080` |
@@ -33,12 +33,14 @@
 3. 처리할 수 없는 PDF는 422 `{code, message}` — `code`는 `ENCRYPTED` / `NO_TEXT_LAYER` / `INVALID_PDF`. `message`는 사용자에게 그대로 보여 줄 한국어.
 4. 응답 JSON 키(camelCase)와 블록 type(`HEADING`, `PARAGRAPH`, `LIST_ITEM`, `TABLE`, `TABLE_CELL`, `FIGURE`)는 d94-query `ParserResponse`와 짝이다. 바꾸면 양쪽을 같이 바꾸고 `PDF_PARSER_VERSION`을 올린다.
 5. 블록 키 `b000001`…, 섹션 키 `s0001`…은 문서 순서다. 저장된 마킹이 이 키를 참조한다.
+6. `POST /pdf/api/v1/syntax`도 `X-Service-Token` 인증이 필요하다. 입력 블록 오프셋에 맞춘 span만 반환하며 span 오프셋은 웹이 JS로 자르므로 UTF-16 단위다. 모델 버전은 캐시 키가 아니다(백엔드 캐시는 버전을 무시). spaCy/모델을 올리면 `DELETE FROM SN_STUDY_SYNTAX`로 비운다.
 
 ## 4. 구조
 
 | 파일 | 책임 |
 |---|---|
 | `pdfparser/api/app.py` | `create_app()`, 인증, 크기 검사, `to_response()` |
+| `pdfparser/syntax.py` | spaCy 영어 문장 역할 span 분석 (lazy model load) |
 | `pdfparser/api/main.py` | 실행용 `app` |
 | `pdfparser/parser/lines.py` | 줄 추출, 본문 폰트 크기, 머리말·꼬리말 제거 |
 | `pdfparser/parser/regions.py` | 캡션 기반 표·그림 영역 |
