@@ -9,6 +9,7 @@ dependencies = [
   "pymupdf>=1.26",
   "python-multipart>=0.0.20",
   "pydantic-settings>=2.7,<3",
+  "spacy>=3.7,<4",
 ]
 
 [project.optional-dependencies]
