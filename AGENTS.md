@@ -33,12 +33,14 @@
 3. 처리할 수 없는 PDF는 422 `{code, message}` — `code`는 `ENCRYPTED` / `NO_TEXT_LAYER` / `INVALID_PDF`. `message`는 사용자에게 그대로 보여 줄 한국어.
 4. 응답 JSON 키(camelCase)와 블록 type(`HEADING`, `PARAGRAPH`, `LIST_ITEM`, `TABLE`, `TABLE_CELL`, `FIGURE`)는 d94-query `ParserResponse`와 짝이다. 바꾸면 양쪽을 같이 바꾸고 `PDF_PARSER_VERSION`을 올린다.
 5. 블록 키 `b000001`…, 섹션 키 `s0001`…은 문서 순서다. 저장된 마킹이 이 키를 참조한다.
+6. `POST /pdf/api/v1/syntax`도 `X-Service-Token` 인증이 필요하다. 입력 블록 오프셋에 맞춘 span만 반환하며 모델 버전은 캐시 무효화 키에 쓰인다.
 
 ## 4. 구조
 
 | 파일 | 책임 |
 |---|---|
 | `pdfparser/api/app.py` | `create_app()`, 인증, 크기 검사, `to_response()` |
+| `pdfparser/syntax.py` | spaCy 영어 문장 역할 span 분석 (lazy model load) |
 | `pdfparser/api/main.py` | 실행용 `app` |
 | `pdfparser/parser/lines.py` | 줄 추출, 본문 폰트 크기, 머리말·꼬리말 제거 |
 | `pdfparser/parser/regions.py` | 캡션 기반 표·그림 영역 |

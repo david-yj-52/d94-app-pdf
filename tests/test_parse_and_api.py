@@ -88,6 +88,19 @@ def test_health_needs_no_token(client):
 def test_parse_without_or_wrong_token_is_401(client):
     assert client.post("/pdf/api/v1/parse", files={"file": ("a.pdf", b"x")}).status_code == 401
     assert _post(client, b"x", token="wrong").status_code == 401
+    assert client.post("/pdf/api/v1/syntax", json={"blocks": []}).status_code == 401
+
+
+def test_syntax_endpoint_auth_and_shape(client, monkeypatch):
+    import pdfparser.api.app as api
+    from pdfparser.syntax import Span
+
+    monkeypatch.setattr(api, "analyze", lambda blocks: [Span(blocks[0][0], 0, 4, "VERB")])
+    response = client.post("/pdf/api/v1/syntax", json={"blocks": [{"key": "b1", "text": "we test it"}]},
+                           headers={"X-Service-Token": "t"})
+    assert response.status_code == 200
+    assert response.json()["analyzerVersion"] and response.json()["spans"] == [
+        {"blockKey": "b1", "start": 0, "end": 4, "role": "VERB"}]
 
 
 def test_create_app_without_token_refuses():
