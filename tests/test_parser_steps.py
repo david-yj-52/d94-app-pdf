@@ -49,8 +49,16 @@ def test_two_column_table_cells_keep_spaces():
     assert r.cells[1][0] == "What is the prime reason for the review?"
 
 
-def test_page_without_caption_skips_detection():
+def test_ruled_grid_without_caption_or_reference_is_detected():
+    # 한국어 단어장처럼 캡션도 "table" 언급도 없는 격자 표
     doc = open_pdf(make_pdf([[T("x", 80)]], grids={1: TableSpec(120, ROWS, "")}))
+    [r] = find_table_regions(doc[0], page_lines(doc, 1))
+    assert r.caption == ""
+    assert r.cells[0] == ["Questions", "Possible Answers"]
+
+
+def test_plain_text_page_has_no_table():
+    doc = open_pdf(make_pdf([[T("Just a paragraph.", 80), T("Another line.", 100)]]))
     assert find_table_regions(doc[0], page_lines(doc, 1)) == []
 
 

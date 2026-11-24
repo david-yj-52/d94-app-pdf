@@ -13,15 +13,13 @@ FIGURE_DPI = 150
 
 def find_table_regions(page: pymupdf.Page, page_lines: list[Line]) -> list[TableRegion]:
     captions = [ln for ln in page_lines if CAPTION_TABLE.match(ln.text)]
-    # CISA 교재는 캡션/테두리 없이 표를 소개한 문장 바로 뒤에 표를 두기도 한다.
-    # 모든 쪽에서 표 감지를 실행하면 비용이 커지므로 표 언급이 있는 쪽만 추가 탐색한다.
     has_table_reference = any(TABLE_REFERENCE.search(ln.text) for ln in page_lines)
-    if not captions and not has_table_reference:
-        return []
     out = []
+    # 선이 그려진 표는 캡션·"table" 언급이 없어도(예: 한국어 단어장) 모든 쪽에서 찾는다.
+    # 선 기반 감지는 벡터 선이 없는 쪽에서 바로 끝나 비용이 작다.
     found = page.find_tables().tables
-    # 선이 없는 표는 기본 선 기반 감지에서 빠진다. 해당 쪽에 표 언급이 있을 때만
-    # 텍스트 배치 기반 감지를 시도해 실행 시간을 제한한다.
+    # 선이 없는 표는 텍스트 배치 기반 감지가 필요하지만 문단 오탐이 많으므로
+    # 표 언급이 있는 쪽에서만 시도한다.
     if not found and has_table_reference:
         found = page.find_tables(strategy="text").tables
     matched_captions: set[int] = set()
