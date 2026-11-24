@@ -1,6 +1,6 @@
 [project]
 name = "d94-app-pdf"
-version = "1.0.0"
+version = "1.0.2"
 description = "PDF → 학습 뷰어용 구조(JSON) 파서"
 requires-python = ">=3.12,<3.13"
 dependencies = [
