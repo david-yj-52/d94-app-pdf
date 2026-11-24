@@ -38,10 +38,7 @@ def find_table_regions(page: pymupdf.Page, page_lines: list[Line]) -> list[Table
         else:
             caption = ""
         # extract()는 띄어쓰기를 잃으므로 셀 영역을 잘라 다시 읽는다
-        cells = [
-            [" ".join(page.get_text("text", clip=c).split()) if c else "" for c in row.cells]
-            for row in t.rows
-        ]
+        cells = [[_cell_text(page, c) if c else "" for c in row.cells] for row in t.rows]
         out.append(TableRegion(page.number + 1, (x0, y0, x1, y1), caption, cells))
 
     # 일부 PDF 표는 선 없이 두 열의 텍스트만 배치해 PyMuPDF가 감지하지 못한다.
@@ -53,6 +50,18 @@ def find_table_regions(page: pymupdf.Page, page_lines: list[Line]) -> list[Table
         if region:
             out.append(region)
     return out
+
+
+def _cell_text(page: pymupdf.Page, rect) -> str:
+    """같은 PDF 텍스트 블록의 줄(자동 줄바꿈)은 공백으로 잇고, 블록 경계는 줄바꿈으로 남긴다."""
+    parts = []
+    for b in page.get_text("dict", clip=rect)["blocks"]:
+        if b["type"] != 0:
+            continue
+        text = " ".join("".join(s["text"] for ln in b["lines"] for s in ln["spans"] + [{"text": " "}]).split())
+        if text:
+            parts.append(text)
+    return "\n".join(parts)
 
 
 def _find_borderless_columns(page: pymupdf.Page, page_lines: list[Line], caption: Line) -> TableRegion | None:

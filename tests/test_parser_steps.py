@@ -1,9 +1,10 @@
+import pymupdf
 from pdf_factory import ImageSpec, T, TableSpec, make_pdf, open_pdf, page_lines
 
 from pdfparser.parser.headings import match_toc_headings
 from pdfparser.parser.lines import body_font_size, extract_lines, remove_running_lines
 from pdfparser.parser.model import Line
-from pdfparser.parser.regions import find_figure_regions, find_table_regions
+from pdfparser.parser.regions import _cell_text, find_figure_regions, find_table_regions
 from pdfparser.parser.text_blocks import build_text_blocks
 
 
@@ -158,3 +159,14 @@ def test_paragraph_continues_across_page_only_without_period():
 def test_list_item_continues_across_page():
     bs = _blocks([_line("• Focus on high-risk", page=1), _line("areas", page=2)])
     assert [(b.type, b.text) for b in bs] == [("LIST_ITEM", "Focus on high-risk areas")]
+
+
+def test_cell_keeps_separate_lines_but_joins_wrapped_text():
+    doc = pymupdf.open()
+    page = doc.new_page(width=595, height=842)
+    long = "This sentence is long enough that it has to wrap inside the cell box."
+    assert page.insert_textbox(pymupdf.Rect(100, 100, 260, 140), long, fontsize=9) >= 0  # 자동 줄바꿈
+    page.insert_text((100, 162), "Example sentence.", fontsize=9)  # 별도 줄(가운데 정렬처럼 x가 다름)
+    page.insert_text((130, 178), "예문 해석", fontsize=9, fontname="korea")
+    doc = open_pdf(doc.tobytes())
+    assert _cell_text(doc[0], pymupdf.Rect(95, 95, 270, 185)) == long + "\nExample sentence.\n예문 해석"
